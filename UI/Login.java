@@ -1,6 +1,7 @@
 package UI;
 
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.Scanner;
 
 import Domain.User;
@@ -79,7 +80,7 @@ public class Login {
                 continue;
             }
 
-            if(!password1.equals(password2)) {
+            if (!password1.equals(password2)) {
                 System.out.println("the two passwords are different, please check it again");
                 continue;
             }
@@ -94,6 +95,59 @@ public class Login {
 
     public void login(ArrayList<User> list) {
         System.out.println("the user chose the login operation");
+
+        Scanner sc = new Scanner(System.in);
+        System.out.println("please imput your username here:");
+        String username = sc.next();
+
+        if (!contains(list, username)) {
+            System.out.println("you should register at first");
+            return;
+        }
+
+        int index = findIndex(list, username);
+        User u = list.get(index);
+        if (!u.isStatus()) {
+            System.out.println("sorry, this account has been banned");
+            return;
+        }
+
+        String rightpassword = u.getPassword();
+
+        for (int i = 0; i < 3; i++) {
+            System.out.println("please imput your password here:");
+            String password = sc.next();
+
+            while (true) {
+                String rightcode = getCode();
+                System.out.println("verification code:" + rightcode);
+
+                System.out.println("please imput the verification code here:");
+                String code = sc.next();
+
+                if (rightcode.equalsIgnoreCase(code)) {
+                    System.out.println("yay right code ^o^");
+                    break;
+                } else {
+                    System.out.println("sad life, wrong code T_T");
+                    continue;
+                }
+            }
+
+            if (rightpassword.equals(password)) {
+                System.out.println("log in sucessfully");
+                break;
+            } else {
+                System.out.println("wrong password, please imput it again");
+                if (i == 2) {
+                    u.setStatus(false);
+                    System.out.println("sorry, this account has been banned");
+                    return;
+                } else {
+                    System.out.println("you only have " + (2 - i) + "chances left");
+                }
+            }
+        }
     }
 
     public boolean checkLen(int minLen, int maxLen, String str) {
@@ -104,7 +158,7 @@ public class Login {
         }
     }
 
-    public int[] getCount (String userInfo) {
+    public int[] getCount(String userInfo) {
         int charCount = 0;
         int numCount = 0;
         int otherCount = 0;
@@ -120,7 +174,7 @@ public class Login {
             }
         }
 
-        return new int[] {charCount, numCount, otherCount};
+        return new int[] { charCount, numCount, otherCount };
     }
 
     public boolean checkUsername(String username) {
@@ -132,13 +186,13 @@ public class Login {
     public boolean checkPassword(String password) {
         int[] arr = getCount(password);
 
-        return arr[0] > 0 && arr[1] > 0 && arr[2] ==0;
+        return arr[0] > 0 && arr[1] > 0 && arr[2] == 0;
     }
 
-    public boolean contains (ArrayList<User> list, String username) {
+    public boolean contains(ArrayList<User> list, String username) {
         for (int i = 0; i < list.size(); i++) {
             User u = list.get(i);
-            if(u.getUsername().equals(username)) {
+            if (u.getUsername().equals(username)) {
                 return true;
             }
         }
@@ -146,4 +200,44 @@ public class Login {
         return false;
     }
 
+    public static String getCode() {
+        ArrayList<Character> list = new ArrayList<>();
+
+        for (int i = 0; i < 26; i++) {
+            list.add((char) ('a' + i));
+            list.add((char) ('A' + i));
+        }
+
+        StringBuilder sb = new StringBuilder();
+        Random r = new Random();
+
+        for (int i = 0; i < 4; i++) {
+            int index = r.nextInt(list.size());
+            char c = list.get(index);
+            sb.append(c);
+        }
+
+        sb.append(r.nextInt(10));
+
+        char[] arr = sb.toString().toCharArray();
+
+        int i = r.nextInt(arr.length);
+        char temp = arr[i];
+        arr[i] = arr[arr.length - 1];
+        arr[arr.length - 1] = temp;
+
+        String code = new String(arr);
+        return code;
+    }
+
+    public int findIndex(ArrayList<User> list, String username) {
+        for (int i = 0; i < list.size(); i++) {
+            User u = list.get(i);
+            if (u.getUsername().equals(username)) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
 }
